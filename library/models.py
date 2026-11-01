@@ -79,7 +79,7 @@ class BookModel(models.Model):
         related_name='books'
     )
     isbn = models.CharField(max_length=20, unique=True)
-    published_date = models.DateField(null=True, blank=True)
+    published_year = models.PositiveIntegerField(null=True, blank=True)
     available_copies = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
