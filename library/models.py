@@ -65,7 +65,7 @@ class CategoryModel(models.Model):
         return self.name
 
 class BookModel(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True, default='')
     author = models.ForeignKey(
@@ -78,14 +78,14 @@ class BookModel(models.Model):
         on_delete=models.PROTECT,
         related_name='books'
     )
-    isbn = models.CharField(unique=True)
-    published_date = models.DateField(auto_now_add=True)
+    isbn = models.CharField(max_length=20, unique=True)
+    published_date = models.DateField(null=True, blank=True)
     available_copies = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.name)
+            base_slug = slugify(self.title)
     
             slug = base_slug
             counter = 2
