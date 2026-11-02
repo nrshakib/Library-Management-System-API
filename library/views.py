@@ -56,5 +56,39 @@ class AuthorDetailAPIView(APIView):
             "data": serializer.data
         })
 
+    def put(self, request, identifier):
+        incoming_data = request.data
+        if identifier.isdigit():
+            author = get_object_or_404(AuthorModel, id=int(identifier))
+        else:
+            author = get_object_or_404(AuthorModel, slug=identifier)
+
+        serializer = AuthorSerializer(author,data=incoming_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Author updated successfully",
+            "data": serializer.data
+        })
+
+    def patch(self, request, identifier):
+        incoming_data = request.data
+
+        if identifier.isdigit():
+            author = get_object_or_404(AuthorModel, id=int(identifier))
+        else:
+            author = get_object_or_404(AuthorModel, slug=identifier)
+
+        serializer = AuthorSerializer(author, data=incoming_data, partial=True)
+        
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Author updated successfully",
+            "data": serializer.data
+        })
 
 
