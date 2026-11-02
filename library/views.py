@@ -214,3 +214,57 @@ class BookListCreateAPIView(APIView):
             "data": serializer.data
             }, status=status.HTTP_201_CREATED
         )
+
+class BookDetailAPIView(APIView):
+    def get_book(self, identifier):
+        if identifier.isdigit():
+            book = get_object_or_404(BookModel, id=int(identifier))
+        else:
+            book = get_object_or_404(BookModel, slug=identifier)
+
+        return book
+
+    def get(self, request, identifier):
+        book = self.get_book(identifier)
+        serializer = BookSerializer(book)
+
+        return Response({
+            "message": "Book retrieved successfully",
+            "data": serializer.data
+        }, status= status.HTTP_200_OK )
+
+    def put(self, request, identifier):
+        incoming_data = request.data
+        book = self.get_book(identifier)
+        serializer = BookSerializer(book, data=incoming_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Book updated successfully",
+            "data": serializer.data
+        },status=status.HTTP_200_OK )
+
+    def patch(self, request, identifier):
+            incoming_data = request.data
+            book = self.get_book(identifier)
+            serializer = BookSerializer(book, data=incoming_data, partial=True)
+    
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+    
+            return Response({
+                "message": "Book updated successfully",
+                "data": serializer.data
+            },status=status.HTTP_200_OK )
+
+    def delete(self, request, identifier):
+            book = self.get_book(identifier)
+    
+            book.delete()
+    
+            return Response({
+                "message": "Book deleted successfully",
+                "data": None
+            },status=status.HTTP_200_OK )

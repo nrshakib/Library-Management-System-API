@@ -14,4 +14,5 @@ urlpatterns = [
 
     # books
     path('books/', views.BookListCreateAPIView.as_view(), name='book-list-create'),
+    path('book/<str:identifier>/', views.BookDetailAPIView.as_view(), name='book-detail')
 ]
