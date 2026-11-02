@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from library.models import AuthorModel
-from library.serializers import AuthorSerializer
+from library.models import AuthorModel, CategoryModel
+from library.serializers import AuthorSerializer, CategorySerializer
 
 class AuthorListCreateAPIView(APIView):
     def get(self, request):
@@ -103,3 +103,28 @@ class AuthorDetailAPIView(APIView):
             "message": "Author deleted successfully"
         }, status=status.HTTP_200_OK)
 
+class CategoryListCreateAPI(APIView):
+    def get(self, request):
+        category_data = CategoryModel.objects.all()
+        serializer = CategorySerializer(category_data, many=True)
+
+        return Response({
+            "message": "Categories retrieved successfully",
+            "data": serializer.data
+        },
+            status= status.HTTP_200_OK
+        )
+
+    def post(self, request):
+        incoming_data= request.data
+        serializer = CategorySerializer(data=incoming_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Category created successfully",
+            "data": serializer.data
+        },
+            status= status.HTTP_201_CREATED
+        )
