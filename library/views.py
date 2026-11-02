@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from library.models import AuthorModel, CategoryModel
-from library.serializers import AuthorSerializer, CategorySerializer
+from library.models import AuthorModel, BookModel, CategoryModel
+from library.serializers import AuthorSerializer, BookSerializer, CategorySerializer
 
 class AuthorListCreateAPIView(APIView):
     def get(self, request):
@@ -190,4 +190,27 @@ class CategoryDetailsAPI(APIView):
             "data": None
         },
             status= status.HTTP_200_OK
+        )
+
+class BookListCreateAPIView(APIView):
+    def get(self, request):
+        books = BookModel.objects.all()
+        serializer = BookSerializer(books, many=True)
+
+        return Response({
+            "message": "All books retrieved successfully",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK )
+
+    def post(self, request):
+        incoming_data = request.data
+        serializer = BookSerializer(data=incoming_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Book created successfully",
+            "data": serializer.data
+            }, status=status.HTTP_201_CREATED
         )
