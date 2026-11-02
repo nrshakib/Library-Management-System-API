@@ -91,4 +91,15 @@ class AuthorDetailAPIView(APIView):
             "data": serializer.data
         })
 
+    def delete(self, request, identifier):
+        if identifier.isdigit():
+            author = get_object_or_404(AuthorModel, id=int(identifier))
+        else:
+            author = get_object_or_404(AuthorModel, slug=identifier)
+
+        author.delete()
+
+        return Response({
+            "message": "Author deleted successfully"
+        }, status=status.HTTP_200_OK)
 
