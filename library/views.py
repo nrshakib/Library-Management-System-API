@@ -128,3 +128,66 @@ class CategoryListCreateAPI(APIView):
         },
             status= status.HTTP_201_CREATED
         )
+
+class CategoryDetailsAPI(APIView):
+    def get_category(self, identifier):
+        if identifier.isdigit():
+            category = get_object_or_404(CategoryModel, id=int(identifier))
+        else:
+            category = get_object_or_404(CategoryModel, slug=identifier)
+
+        return category
+
+    def get(self, request, identifier):
+        category = self.get_category(identifier)
+        serializer = CategorySerializer(category)
+
+        return Response({
+            "message": "Category retrieved successfully",
+            "data": serializer.data
+        },
+            status= status.HTTP_200_OK
+        )
+
+
+    def put(self, request, identifier):
+        incoming_data = request.data
+        category = self.get_category(identifier)
+        serializer = CategorySerializer(category, data=incoming_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Category updated successfully",
+            "data": serializer.data
+        },
+            status= status.HTTP_200_OK
+        )
+
+    def patch(self, request, identifier):
+        incoming_data = request.data
+        category = self.get_category(identifier)
+        serializer = CategorySerializer(category, data=incoming_data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Category updated successfully",
+            "data": serializer.data
+        },
+            status= status.HTTP_200_OK
+        )
+
+    def delete(self, request, identifier):
+        category = self.get_category(identifier)
+
+        category.delete()
+        
+        return Response({
+            "message": "Category deleted successfully",
+            "data": None
+        },
+            status= status.HTTP_200_OK
+        )
