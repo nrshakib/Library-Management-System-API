@@ -25,7 +25,7 @@ The primary goal is to build a structured backend application while gaining prac
 ## Project Goals
 
 - Build a RESTful API using Django REST Framework.
-- Understand APIView and HTTP methods through practical implementation.
+- Understand GenericAPIView and HTTP methods through practical implementation.
 - Practice ModelSerializer and data validation.
 - Implement CRUD operations for different resources.
 - Understand ForeignKey relationships between Django models.
@@ -149,7 +149,7 @@ The Book model establishes relationships with Author and Category using ForeignK
 - Django Models
 - Django ORM
 - Django Admin
-- Django REST Framework APIView
+- Django REST Framework GenericAPIView
 - ModelSerializer
 - Serializer validation
 - CRUD operations
