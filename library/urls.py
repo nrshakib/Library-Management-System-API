@@ -9,8 +9,8 @@ urlpatterns = [
     path('author/<str:identifier>/', views.AuthorDetailGenericAPIView.as_view(), name='author-details'),
 
     # category
-    path('categories/', views.CategoryListCreateAPI.as_view(), name='category-list-create'),
-    path('category/<str:identifier>/', views.CategoryDetailsAPI.as_view(), name='category-details'),
+    path('categories/', views.CategoryListCreateGenericAPIView.as_view(), name='category-list-create'),
+    path('category/<str:identifier>/', views.CategoryDetailGenericAPIView.as_view(), name='category-details'),
 
     # books
     path('books/', views.BookListCreateAPIView.as_view(), name='book-list-create'),

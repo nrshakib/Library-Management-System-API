@@ -109,93 +109,98 @@ class AuthorDetailGenericAPIView(GenericAPIView):
             status_code=status.HTTP_200_OK
         )
 
-class CategoryListCreateAPI(APIView):
-    def get(self, request):
-        category_data = CategoryModel.objects.all()
-        serializer = CategorySerializer(category_data, many=True)
+class CategoryListCreateGenericAPIView(GenericAPIView):
+    queryset = CategoryModel.objects.all()
+    serializer_class = CategorySerializer
 
-        return Response({
-            "message": "Categories retrieved successfully",
-            "data": serializer.data
-        },
-            status= status.HTTP_200_OK
+    def get(self, request):
+        categories = self.get_queryset()
+        serializer = self.get_serializer(categories, many=True)
+
+        return api_response(
+            message= "Categories retrieved successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
         )
 
     def post(self, request):
         incoming_data= request.data
-        serializer = CategorySerializer(data=incoming_data)
+        serializer = self.get_serializer(data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Category created successfully",
-            "data": serializer.data
-        },
-            status= status.HTTP_201_CREATED
+        return api_response(
+            message= "Category created successfully",
+            data= serializer.data,
+            status_code=status.HTTP_201_CREATED
         )
 
-class CategoryDetailsAPI(APIView):
-    def get_category(self, identifier):
-        if identifier.isdigit():
-            category = get_object_or_404(CategoryModel, id=int(identifier))
-        else:
-            category = get_object_or_404(CategoryModel, slug=identifier)
+class CategoryDetailGenericAPIView(GenericAPIView):
+    queryset = CategoryModel.objects.all()
+    serializer_class = CategorySerializer
 
-        return category
+    def identifier_is_id(self, identifier):
+        return identifier.isdigit()
+
+    def get_object(self):
+        identifier = self.kwargs.get('identifier')
+    
+        if self.identifier_is_id(identifier):
+            return get_object_or_404(
+                self.get_queryset(), id=int(identifier))
+    
+        else:
+            return get_object_or_404(
+                self.get_queryset(), slug=identifier)
 
     def get(self, request, identifier):
-        category = self.get_category(identifier)
-        serializer = CategorySerializer(category)
+        category = self.get_object()
+        serializer = self.get_serializer(category)
 
-        return Response({
-            "message": "Category retrieved successfully",
-            "data": serializer.data
-        },
-            status= status.HTTP_200_OK
+        return api_response(
+            message= "Category retrieved successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
         )
 
 
     def put(self, request, identifier):
         incoming_data = request.data
-        category = self.get_category(identifier)
-        serializer = CategorySerializer(category, data=incoming_data)
+        category = self.get_object()
+        serializer = self.get_serializer(category, data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Category updated successfully",
-            "data": serializer.data
-        },
-            status= status.HTTP_200_OK
+        return api_response(
+            message= "Category updated successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
         )
 
     def patch(self, request, identifier):
         incoming_data = request.data
-        category = self.get_category(identifier)
-        serializer = CategorySerializer(category, data=incoming_data, partial=True)
+        category = self.get_object()
+        serializer = self.get_serializer(category, data=incoming_data, partial=True)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Category updated successfully",
-            "data": serializer.data
-        },
-            status= status.HTTP_200_OK
+        return api_response(
+            message= "Category updated successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
         )
 
     def delete(self, request, identifier):
-        category = self.get_category(identifier)
-
+        category = self.get_object()
         category.delete()
         
-        return Response({
-            "message": "Category deleted successfully",
-            "data": None
-        },
-            status= status.HTTP_200_OK
+        return api_response(
+            message= "Category deleted successfully",
+            data= None,
+            status_code=status.HTTP_200_OK
         )
 
 class BookListCreateAPIView(APIView):
