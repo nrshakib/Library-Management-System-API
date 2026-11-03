@@ -1,107 +1,113 @@
+from django.core.serializers import serialize
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from library.models import AuthorModel, BookModel, CategoryModel
 from library.serializers import AuthorSerializer, BookSerializer, CategorySerializer
+from utils.utils import api_response
 
-class AuthorListCreateAPIView(APIView):
+class AuthorListCreateGenericAPIView(GenericAPIView):
+    queryset = AuthorModel.objects.all()
+    serializer_class = AuthorSerializer
+
     def get(self, request):
-        author_data = AuthorModel.objects.all()
-        serializer = AuthorSerializer(author_data, many=True)
+        authors = self.get_queryset()
+        serializer = self.get_serializer(authors, many=True)
 
-        return Response({
-            "message": "Author retrieved successfully",
-            "data": serializer.data
-            },
-            status= status.HTTP_200_OK
+        return api_response(
+            message= "Authors retrieved successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
         )
 
-
     def post(self, request):
-        data = request.data
-        serializer = AuthorSerializer(data = data)
+        incoming_data = request.data
+        serializer = self.get_serializer(data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-             "message": "Author created successfully",
-             "data": serializer.data
-            },status= status.HTTP_201_CREATED
-    )
+        return api_response(
+            message= "Author created successfully",
+            data= serializer.data,
+            status_code=status.HTTP_201_CREATED
+        )
+    
+class AuthorDetailGenericAPIView(GenericAPIView):
+    queryset = AuthorModel.objects.all()
+    serializer_class = AuthorSerializer
 
-class AuthorDetailAPIView(APIView):
+    def identifier_is_id(self, identifier):
+            # returns true if identifier is totally numeric/digit
+            # returns false if identifier contains characters alongside or without digits
+            return identifier.isdigit()
+    
+    def get_object(self):
+        # get the identifier from the url parameter: kwargs = url parameter
+        identifier = self.kwargs.get('identifier')
+    
+        # If the identifier contains only digits, convert it to an integer and fetch the author by id.
+        if self.identifier_is_id(identifier):
+            return get_object_or_404(
+                self.get_queryset(), id=int(identifier))
+    
+        # if identifier contains any character, fetch author based on slug
+        else:
+            return get_object_or_404(
+                self.get_queryset(), slug=identifier)
+            
     # here detail can be fetched using id or slug
     def get(self, request, identifier):
+        author = self.get_object()
+        serializer = self.get_serializer(author)
 
-        # method 1 to fetch detail using id and slug
-        # used Q to apply multiple query condition to fetch identifier
-        # author = get_object_or_404(AuthorModel, Q(id=identifier) | Q(slug=identifier))
-
-        # method 2 to fetch detail using id and slug
-        # isdigit() is a string method to check if the string item contains only digit or not
-        if identifier.isdigit():
-            # If the identifier contains only digits, convert it to an integer and fetch the author by ID.
-            author = get_object_or_404(AuthorModel, id=int(identifier))
-        else:
-            author = get_object_or_404(AuthorModel, slug=identifier)
-
-        serializer = AuthorSerializer(author)
-
-        return Response({
-            "message": "Author retrieved successfully",
-            "data": serializer.data
-        })
-
+        return api_response(
+            message= "Author retrieved successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
+        )
+        
     def put(self, request, identifier):
         incoming_data = request.data
-        if identifier.isdigit():
-            author = get_object_or_404(AuthorModel, id=int(identifier))
-        else:
-            author = get_object_or_404(AuthorModel, slug=identifier)
-
-        serializer = AuthorSerializer(author,data=incoming_data)
+        author = self.get_object()
+        serializer = self.get_serializer(author, data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Author updated successfully",
-            "data": serializer.data
-        })
+        return api_response(
+            message= "Author updated successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
+        )
 
     def patch(self, request, identifier):
         incoming_data = request.data
-
-        if identifier.isdigit():
-            author = get_object_or_404(AuthorModel, id=int(identifier))
-        else:
-            author = get_object_or_404(AuthorModel, slug=identifier)
-
-        serializer = AuthorSerializer(author, data=incoming_data, partial=True)
+        author = self.get_object()
+        serializer = self.get_serializer(author, data=incoming_data, partial=True)
         
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Author updated successfully",
-            "data": serializer.data
-        })
+        return api_response(
+            message= "Author updated successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
+        )
 
     def delete(self, request, identifier):
-        if identifier.isdigit():
-            author = get_object_or_404(AuthorModel, id=int(identifier))
-        else:
-            author = get_object_or_404(AuthorModel, slug=identifier)
-
+        author = self.get_object()
         author.delete()
 
-        return Response({
-            "message": "Author deleted successfully"
-        }, status=status.HTTP_200_OK)
+        return api_response(
+            message= "Author deleted successfully",
+            data= None,
+            status_code=status.HTTP_200_OK
+        )
 
 class CategoryListCreateAPI(APIView):
     def get(self, request):
