@@ -29,6 +29,17 @@ class BookSerializer(serializers.ModelSerializer):
     author = AuthorSummarySerializer(read_only=True)
     category = CategorySummarySerializer(read_only=True)
 
+    author_id = serializers.PrimaryKeyRelatedField(
+        queryset=AuthorModel.objects.all(),
+        source='author',
+        write_only=True
+    )
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=CategoryModel.objects.all(),
+        source='category',
+        write_only=True
+    )
+
     class Meta:
         model= BookModel
         fields = '__all__'

@@ -203,79 +203,87 @@ class CategoryDetailGenericAPIView(GenericAPIView):
             status_code=status.HTTP_200_OK
         )
 
-class BookListCreateAPIView(APIView):
-    def get(self, request):
-        books = BookModel.objects.all()
-        serializer = BookSerializer(books, many=True)
+class BookListCreateGenericAPIView(GenericAPIView):
+    queryset = BookModel.objects.all()
+    serializer_class = BookSerializer
 
-        return Response({
-            "message": "All books retrieved successfully",
-            "data": serializer.data
-        }, status=status.HTTP_200_OK )
+    def get(self, request):
+        books = self.get_queryset()
+        serializer = self.get_serializer(books, many=True)
+
+        return api_response(
+            message= "Books retrieved successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK
+        )
 
     def post(self, request):
         incoming_data = request.data
-        serializer = BookSerializer(data=incoming_data)
+        serializer = self.get_serializer(data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Book created successfully",
-            "data": serializer.data
-            }, status=status.HTTP_201_CREATED
+        return api_response(
+            message= "Book created successfully",
+            data= serializer.data,
+            status_code=status.HTTP_201_CREATED
         )
 
-class BookDetailAPIView(APIView):
-    def get_book(self, identifier):
-        if identifier.isdigit():
-            book = get_object_or_404(BookModel, id=int(identifier))
-        else:
-            book = get_object_or_404(BookModel, slug=identifier)
+class BookDetailGenericAPIView(GenericAPIView):
+    queryset = BookModel.objects.all()
+    serializer_class=BookSerializer
+    def identifier_is_id(self, identifier):
+        return identifier.isdigit()
 
-        return book
+    def get_object(self):
+        identifier = self.kwargs.get('identifier')
+
+        if self.identifier_is_id(identifier):
+            return get_object_or_404(self.get_queryset(), id=int(identifier))
+        else:
+            return get_object_or_404(self.get_queryset(), slug=identifier)
 
     def get(self, request, identifier):
-        book = self.get_book(identifier)
-        serializer = BookSerializer(book)
+        book = self.get_object()
+        serializer = self.get_serializer(book)
 
-        return Response({
-            "message": "Book retrieved successfully",
-            "data": serializer.data
-        }, status= status.HTTP_200_OK )
+        return api_response(
+            message= "Book retrieved successfully",
+            data= serializer.data,
+            status_code= status.HTTP_200_OK )
 
     def put(self, request, identifier):
         incoming_data = request.data
-        book = self.get_book(identifier)
-        serializer = BookSerializer(book, data=incoming_data)
+        book = self.get_object()
+        serializer = self.get_serializer(book, data=incoming_data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "message": "Book updated successfully",
-            "data": serializer.data
-        },status=status.HTTP_200_OK )
+        return api_response(
+            message= "Book updated successfully",
+            data= serializer.data,
+            status_code=status.HTTP_200_OK )
 
     def patch(self, request, identifier):
             incoming_data = request.data
-            book = self.get_book(identifier)
-            serializer = BookSerializer(book, data=incoming_data, partial=True)
+            book = self.get_object()
+            serializer = self.get_serializer(book, data=incoming_data, partial=True)
     
             serializer.is_valid(raise_exception=True)
             serializer.save()
     
-            return Response({
-                "message": "Book updated successfully",
-                "data": serializer.data
-            },status=status.HTTP_200_OK )
+            return api_response(
+                message= "Book updated successfully",
+                data= serializer.data,
+                status_code=status.HTTP_200_OK )
 
     def delete(self, request, identifier):
-            book = self.get_book(identifier)
-    
+            book = self.get_object()
             book.delete()
     
-            return Response({
-                "message": "Book deleted successfully",
-                "data": None
-            },status=status.HTTP_200_OK )
+            return api_response(
+                message= "Book deleted successfully",
+                data= None,
+                status_code=status.HTTP_200_OK )

@@ -13,6 +13,6 @@ urlpatterns = [
     path('category/<str:identifier>/', views.CategoryDetailGenericAPIView.as_view(), name='category-details'),
 
     # books
-    path('books/', views.BookListCreateAPIView.as_view(), name='book-list-create'),
-    path('book/<str:identifier>/', views.BookDetailAPIView.as_view(), name='book-detail')
+    path('books/', views.BookListCreateGenericAPIView.as_view(), name='book-list-create'),
+    path('book/<str:identifier>/', views.BookDetailGenericAPIView.as_view(), name='book-detail')
 ]
