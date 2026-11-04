@@ -1,13 +1,10 @@
-from django.core.serializers import serialize
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from library.models import AuthorModel, BookModel, CategoryModel
+from library.pagination import CustomPagination
 from library.serializers import AuthorSerializer, BookSerializer, CategorySerializer
 from utils.utils import api_response
 
@@ -207,6 +204,7 @@ class CategoryDetailGenericAPIView(GenericAPIView):
 class BookListCreateGenericAPIView(GenericAPIView):
     queryset = BookModel.objects.all()
     serializer_class = BookSerializer
+    pagination_class = CustomPagination
 
     def get_filtered_books(self, request, books):
         author_id = request.query_params.get('author_id')
@@ -244,12 +242,18 @@ class BookListCreateGenericAPIView(GenericAPIView):
         
         books = self.get_filtered_books(request, books)
         books = self.get_sorted_books(request, books)
+        page = self.paginate_queryset(books)
 
-        serializer = self.get_serializer(books, many=True)
+        serializer = self.get_serializer(page, many=True)
 
         return api_response(
             message= "Books retrieved successfully",
-            data= serializer.data,
+            data= {
+                "count": self.paginator.page.paginator.count,
+                "next": self.paginator.get_next_link(),
+                "previous": self.paginator.get_previous_link(),
+                "result": serializer.data
+            },
             status_code=status.HTTP_200_OK
         )
 
