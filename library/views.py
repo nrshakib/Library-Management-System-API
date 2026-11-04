@@ -2,6 +2,7 @@ from django.core.serializers import serialize
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -207,8 +208,43 @@ class BookListCreateGenericAPIView(GenericAPIView):
     queryset = BookModel.objects.all()
     serializer_class = BookSerializer
 
+    def get_filtered_books(self, request, books):
+        author_id = request.query_params.get('author_id')
+        category_id = request.query_params.get('category_id')
+        search_params = request.query_params.get('search')
+
+        if author_id:
+            books = books.filter(author_id = author_id)
+        if category_id:
+            books = books.filter(category_id=category_id)
+        
+        if search_params:
+            books = books.filter(title__icontains=search_params)
+
+        return books
+
+    def get_sorted_books(self, request, books):
+        ordering = request.query_params.get('ordering')
+        allowed_fields = ['title', '-title', 'created_at', '-created_at', 'available_copies', '-available_copies']
+
+        if ordering:
+            if ordering in allowed_fields:
+                books = books.order_by(ordering)
+
+            else:
+                raise ValidationError({
+                    "Ordering": "Invalid ordering value. Use title, -title, created_at, -created_at, available_copies or -available_copies."
+                })
+
+        return books
+
+
     def get(self, request):
         books = self.get_queryset()
+        
+        books = self.get_filtered_books(request, books)
+        books = self.get_sorted_books(request, books)
+
         serializer = self.get_serializer(books, many=True)
 
         return api_response(
