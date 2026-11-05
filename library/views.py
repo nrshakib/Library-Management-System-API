@@ -9,7 +9,8 @@ from library.serializers import AuthorSerializer, BookSerializer, CategorySerial
 from utils.utils import api_response
 
 class AuthorListCreateGenericAPIView(GenericAPIView):
-    queryset = AuthorModel.objects.all()
+    queryset = AuthorModel.objects.prefetch_related('books')
+    # queryset = AuthorModel.objects.all()
     serializer_class = AuthorSerializer
 
     def get(self, request):
@@ -202,9 +203,12 @@ class CategoryDetailGenericAPIView(GenericAPIView):
         )
 
 class BookListCreateGenericAPIView(GenericAPIView):
-    queryset = BookModel.objects.all()
+    # queryset = BookModel.objects.all()
     serializer_class = BookSerializer
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        return BookModel.objects.select_related('author','category')
 
     def get_filtered_books(self, request, books):
         author_id = request.query_params.get('author_id')
@@ -252,7 +256,7 @@ class BookListCreateGenericAPIView(GenericAPIView):
                 "count": self.paginator.page.paginator.count,
                 "next": self.paginator.get_next_link(),
                 "previous": self.paginator.get_previous_link(),
-                "result": serializer.data
+                "results": serializer.data
             },
             status_code=status.HTTP_200_OK
         )
