@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from library.models import AuthorModel, BookModel, CategoryModel
 
@@ -44,3 +47,26 @@ class BookSerializer(serializers.ModelSerializer):
         model= BookModel
         fields = '__all__'
         read_only_fields = ['id', 'slug', 'created_at']
+
+    def validate(self, attrs):
+        published_year = attrs.get('published_year')
+        current_year = datetime.now().year
+
+        if published_year and published_year > current_year:
+            raise ValidationError({
+                "published_year": "Published year cannot be in the future."
+            })
+
+        return attrs
+
+    def validate_available_copies(self, value):
+        if value < 0:
+            raise ValidationError("Available copies cannot be negative.")
+
+        return value
+
+    def validate_isbn(self, value):
+        if len(value) < 10:
+            raise ValidationError('ISBN must contain at least 10 characters.')
+        
+        return value
